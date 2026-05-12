@@ -293,22 +293,26 @@ def build_child_env(extra: dict[str, str] | None = None) -> dict[str, str]:
         == "openclaw-bridge"
     ):
         merged.setdefault("POKERCLAW_AGENT_BRIDGE_ENABLED", "true")
-        # Best-effort OpenClaw identity lookup. Failure is non-fatal — the
-        # dealer's resolveOpponentProfile() falls back to a generic profile.
-        if not merged.get("POKERCLAW_OPPONENT_NAME"):
-            ident = fetch_openclaw_identity(
-                merged.get("POKERCLAW_BRIDGE_LIVE_AGENT_ID", "")
-            )
-            if ident is not None:
-                if ident.get("name"):
-                    merged["POKERCLAW_OPPONENT_NAME"] = ident["name"]
-                if ident.get("emoji"):
-                    merged["POKERCLAW_OPPONENT_EMOJI"] = ident["emoji"]
-                if ident.get("theme"):
-                    merged["POKERCLAW_OPPONENT_THEME"] = ident["theme"]
-                if ident.get("avatar"):
-                    merged["POKERCLAW_OPPONENT_AVATAR"] = ident["avatar"]
-                merged["POKERCLAW_OPPONENT_FROM_OPENCLAW"] = "true"
+    # Best-effort OpenClaw identity lookup, done regardless of strategy. If the
+    # operator set POKERCLAW_BRIDGE_LIVE_AGENT_ID (even when running in
+    # fast-live mode), we pull the configured agent's name/emoji/theme/avatar
+    # for the UI. This lets you play fast against the LLM while keeping your
+    # OpenClaw agent's identity as the on-screen opponent. Failure is
+    # non-fatal — dealer's resolveOpponentProfile() falls back to a generic.
+    if not merged.get("POKERCLAW_OPPONENT_NAME"):
+        ident = fetch_openclaw_identity(
+            merged.get("POKERCLAW_BRIDGE_LIVE_AGENT_ID", "")
+        )
+        if ident is not None:
+            if ident.get("name"):
+                merged["POKERCLAW_OPPONENT_NAME"] = ident["name"]
+            if ident.get("emoji"):
+                merged["POKERCLAW_OPPONENT_EMOJI"] = ident["emoji"]
+            if ident.get("theme"):
+                merged["POKERCLAW_OPPONENT_THEME"] = ident["theme"]
+            if ident.get("avatar"):
+                merged["POKERCLAW_OPPONENT_AVATAR"] = ident["avatar"]
+            merged["POKERCLAW_OPPONENT_FROM_OPENCLAW"] = "true"
     if extra:
         merged.update(extra)
     return merged

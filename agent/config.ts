@@ -196,7 +196,9 @@ export function describeStartup(cfg: AgentConfig): string {
 
   if (requested === 'openclaw-bridge' && cfg.bridge) {
     const fallback = cfg.disableFallback ? 'disabled' : cfg.llm || cfg.fastLive ? 'llm,rules' : 'rules';
-    return `starting mode=${cfg.mode} strategy=openclaw-bridge sessionLabel=${cfg.bridge.sessionLabel} bridgeUrl=${cfg.bridge.url} fallback=${fallback} ${tail}`;
+    const agentId = process.env.POKERCLAW_BRIDGE_LIVE_AGENT_ID?.trim();
+    const agentPart = agentId ? ` agent=${agentId}` : '';
+    return `starting mode=${cfg.mode} strategy=openclaw-bridge${agentPart} sessionLabel=${cfg.bridge.sessionLabel} bridgeUrl=${cfg.bridge.url} fallback=${fallback} ${tail}`;
   }
   if (requested === 'rules') {
     return `starting mode=${cfg.mode} strategy=rules ${tail}`;
