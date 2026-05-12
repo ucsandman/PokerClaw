@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { LegalActions } from '../../shared/actions';
 import type { PlayerAction, Street } from '../../shared/types';
+import { fmtBB } from '../fmt';
 
 type Props = {
   legal: LegalActions | null;
@@ -128,7 +129,7 @@ export function ActionPanel({
                 className="preset-btn"
                 onClick={() => setAmount(p.amount)}
                 disabled={disabled}
-                title={`${p.label} → ${fmtChips(p.amount)}`}
+                title={`${p.label} → ${fmtBB(p.amount, bigBlind)} (${fmtChips(p.amount)})`}
               >
                 {p.label}
               </button>
@@ -152,7 +153,7 @@ export function ActionPanel({
               disabled={disabled}
             />
             <span className="amount-hint">
-              {fmtChips(min)} – {fmtChips(max)}
+              {fmtBB(min, bigBlind)} – {fmtBB(max, bigBlind)}
             </span>
           </div>
         </div>
@@ -184,7 +185,7 @@ export function ActionPanel({
             disabled={disabled}
           >
             <span className="action-btn-label">Call</span>
-            <span className="action-btn-amount">{fmtChips(legal.callTo)}</span>
+            <span className="action-btn-amount">{fmtBB(legal.callTo, bigBlind)}</span>
           </button>
         )}
         {canSize && (
@@ -194,7 +195,7 @@ export function ActionPanel({
             disabled={disabled}
           >
             <span className="action-btn-label">{legal.canBet ? 'Bet' : 'Raise to'}</span>
-            <span className="action-btn-amount">{fmtChips(amount || min)}</span>
+            <span className="action-btn-amount">{fmtBB(amount || min, bigBlind)}</span>
           </button>
         )}
       </div>

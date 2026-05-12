@@ -3,6 +3,7 @@ import type { OpponentProfile, OpponentView, SelfView } from '../../shared/view-
 import { CardView } from './CardView';
 import { Avatar } from './Avatar';
 import { ChipStack } from './ChipStack';
+import { fmtBB } from '../fmt';
 
 type Props = {
   label: string;
@@ -19,13 +20,6 @@ type Props = {
 // Format chip counts with thousands separators. Stable across locales.
 function fmtChips(n: number): string {
   return n.toLocaleString('en-US');
-}
-
-// BB display rounds to one decimal place when not a whole BB.
-function fmtBB(stack: number, bigBlind: number): string {
-  if (bigBlind <= 0) return '0 BB';
-  const bb = stack / bigBlind;
-  return `${(Math.round(bb * 10) / 10).toFixed(1)} BB`;
 }
 
 const KNOWN_THEMES = new Set(['red', 'blue', 'green', 'purple', 'gold']);
@@ -96,7 +90,7 @@ export function PlayerSeat({
           <div className="seat-bet">
             <ChipStack amount={seat.committedThisStreet} variant="bet" />
             <div className="seat-bet-chip">
-              <span className="seat-bet-amount">{fmtChips(seat.committedThisStreet)}</span>
+              <span className="seat-bet-amount">{fmtBB(seat.committedThisStreet, bigBlind)}</span>
             </div>
           </div>
         )}

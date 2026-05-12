@@ -642,26 +642,42 @@ button { font-family: inherit; }
   width: 56px;
   height: 80px;
   border-radius: 8px;
-  background:
-    linear-gradient(180deg, #fefcf3 0%, var(--card-bg) 100%);
-  color: #1a1a1a;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-weight: 800;
+  font-weight: 900;
+  color: #fff;
   box-shadow:
     var(--card-shadow),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.18);
+    inset 0 0 0 1px rgba(0, 0, 0, 0.25),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.10);
   user-select: none;
   position: relative;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
 }
 
-.card.red   { color: var(--red-card); }
-.card.black { color: #1a1a1a; }
+/* 4-color deck: solid suit-tinted backgrounds, white face. Pure CSS gradients
+ * (no images) so they stay crisp at any zoom level. */
+.card.suit-spade {
+  background:
+    radial-gradient(circle at 35% 25%, #4c5666 0%, #1d242e 60%, #0a0e14 100%);
+}
+.card.suit-heart {
+  background:
+    radial-gradient(circle at 35% 25%, #ff6b6b 0%, #c4332f 55%, #5e1410 100%);
+}
+.card.suit-diamond {
+  background:
+    radial-gradient(circle at 35% 25%, #6ab9ff 0%, #1f6ec9 55%, #0a3061 100%);
+}
+.card.suit-club {
+  background:
+    radial-gradient(circle at 35% 25%, #6fd585 0%, #1f9e44 55%, #0d4521 100%);
+}
 
-.card-rank { font-size: 23px; line-height: 1; letter-spacing: -0.02em; }
-.card-suit { font-size: 22px; line-height: 1; margin-top: 2px; }
+.card-rank { font-size: 30px; line-height: 1; letter-spacing: -0.02em; }
+.card-suit { font-size: 28px; line-height: 1; margin-top: 3px; }
 
 .card-back {
   background:
@@ -1098,7 +1114,8 @@ button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
 @media (max-width: 1100px) {
   .felt { padding: 24px 30px; border-radius: 220px / 130px; }
   .card { width: 50px; height: 72px; }
-  .card-rank, .card-suit { font-size: 20px; }
+  .card-rank { font-size: 26px; }
+  .card-suit { font-size: 24px; }
 }
 
 @media (max-width: 920px) {

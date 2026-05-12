@@ -1,5 +1,6 @@
 import type { HandRankCategory, HandResult } from '../../shared/types';
 import { ChipStack } from './ChipStack';
+import { fmtBB } from '../fmt';
 
 const CATEGORY_LABEL: Record<HandRankCategory, string> = {
   'high-card': 'High card',
@@ -13,16 +14,14 @@ const CATEGORY_LABEL: Record<HandRankCategory, string> = {
   'straight-flush': 'Straight flush',
 };
 
-function fmtChips(n: number): string {
-  return n.toLocaleString('en-US');
-}
-
 export function ResultBanner({
   result,
   opponentName = 'Opponent',
+  bigBlind,
 }: {
   result: HandResult;
   opponentName?: string;
+  bigBlind: number;
 }) {
   const isTie = result.winner === 'tie';
   const who = result.winner === 'wes' ? 'Wes' : result.winner === 'moltfire' ? opponentName : null;
@@ -41,7 +40,7 @@ export function ResultBanner({
           <div className="result-eyebrow">{reasonLabel}</div>
           <div className="result-headline">
             {isTie ? 'Split pot' : `${who} wins`}
-            <span className="result-amount"> {fmtChips(result.potAwarded)} chips</span>
+            <span className="result-amount"> {fmtBB(result.potAwarded, bigBlind)}</span>
           </div>
           {showdown && (
             <div className="result-detail">

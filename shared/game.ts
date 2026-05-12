@@ -360,14 +360,19 @@ function maybeAdvanceForAllIn(state: GameState): void {
 function finishHandByFold(state: GameState, winner: PlayerId): void {
   state.currentActor = null;
   state.players[winner].stack += state.pot;
+  // Both players' cards are revealed on fold. This is a study-mode UX choice:
+  // PokerClaw is single-player practice against an LLM, and seeing what the
+  // opponent folded with is much more useful than preserving the live-poker
+  // convention of hiding folded cards. Game state during the hand still
+  // strictly hides them (the engine's view-models gate reveal on
+  // state.handComplete = true).
   const result: HandResult = {
     winner,
     reason: 'fold',
     potAwarded: state.pot,
-    // On a fold, we do NOT reveal the folder's hole cards.
     reveal: {
-      wes: winner === 'wes' ? state.players.wes.holeCards : [],
-      moltfire: winner === 'moltfire' ? state.players.moltfire.holeCards : [],
+      wes: state.players.wes.holeCards,
+      moltfire: state.players.moltfire.holeCards,
     },
   };
   state.result = result;

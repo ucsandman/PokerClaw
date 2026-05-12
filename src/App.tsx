@@ -200,7 +200,7 @@ export default function App() {
             bigBlind={view.bigBlind}
             profile={view.opponentProfile}
           />
-          <Board board={view.board} pot={view.pot} street={view.street} />
+          <Board board={view.board} pot={view.pot} street={view.street} bigBlind={view.bigBlind} />
           <PlayerSeat
             label="Wes"
             player="wes"
@@ -216,7 +216,7 @@ export default function App() {
       <div className="footer">
         {view.handComplete && view.result ? (
           <div className="result-area">
-            <ResultBanner result={view.result} opponentName={opponentName} />
+            <ResultBanner result={view.result} opponentName={opponentName} bigBlind={view.bigBlind} />
             {matchOver ? (
               <>
                 <div className="match-over">
@@ -266,7 +266,7 @@ export default function App() {
           <span className="history-summary-label">Hand history</span>
           <span className="history-summary-hint">{view.actionHistory.length} actions</span>
         </summary>
-        <HandHistory history={view.actionHistory} opponentName={opponentName} />
+        <HandHistory history={view.actionHistory} opponentName={opponentName} bigBlind={view.bigBlind} />
       </details>
 
       <ReviewModal

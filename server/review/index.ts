@@ -112,9 +112,23 @@ async function callAnthropicReview(cfg: ReviewConfig, user: string): Promise<str
       signal: ctrl.signal,
     });
     if (!res.ok) {
-      // Don't echo the body — provider error responses occasionally include
-      // hints about request internals we'd rather not surface.
-      throw new Error(`anthropic http ${res.status}`);
+      // Surface the Anthropic error type/message when available so the user
+      // can actually diagnose the failure (model not found, account doesn't
+      // have access to a tier, max_tokens out of range, etc.). We do not
+      // echo the full body — just the structured error fields.
+      let detail = '';
+      try {
+        const body = (await res.json()) as { error?: { type?: string; message?: string } };
+        const err = body?.error;
+        if (err?.type && err?.message) {
+          detail = `: ${err.type} — ${err.message}`;
+        } else if (err?.message) {
+          detail = `: ${err.message}`;
+        }
+      } catch {
+        // Fall through with no detail if the body isn't JSON.
+      }
+      throw new Error(`anthropic http ${res.status}${detail}`);
     }
     const body = (await res.json()) as { content?: unknown };
     return extractMarkdown(body);

@@ -1,21 +1,18 @@
 import type { ActionRecord, PlayerId } from '../../shared/types';
-
-function fmtChips(n: number): string {
-  return n.toLocaleString('en-US');
-}
+import { fmtBB } from '../fmt';
 
 function actorLabel(player: PlayerId, opponentName: string): string {
   return player === 'wes' ? 'Wes' : opponentName;
 }
 
-function describe(r: ActionRecord): { verb: string; amount: string | null } {
+function describe(r: ActionRecord, bigBlind: number): { verb: string; amount: string | null } {
   const a = r.action;
   switch (a.type) {
     case 'fold':  return { verb: 'folds', amount: null };
     case 'check': return { verb: 'checks', amount: null };
-    case 'call':  return { verb: 'calls', amount: fmtChips(r.committedAfter) };
-    case 'bet':   return { verb: 'bets', amount: fmtChips(a.amount) };
-    case 'raise': return { verb: 'raises to', amount: fmtChips(a.amount) };
+    case 'call':  return { verb: 'calls', amount: fmtBB(r.committedAfter, bigBlind) };
+    case 'bet':   return { verb: 'bets', amount: fmtBB(a.amount, bigBlind) };
+    case 'raise': return { verb: 'raises to', amount: fmtBB(a.amount, bigBlind) };
   }
 }
 
@@ -31,9 +28,11 @@ const STREET_LABELS: Record<string, string> = {
 export function HandHistory({
   history,
   opponentName = 'Opponent',
+  bigBlind,
 }: {
   history: ActionRecord[];
   opponentName?: string;
+  bigBlind: number;
 }) {
   if (history.length === 0) {
     return <div className="hand-history empty">No actions yet.</div>;
@@ -55,11 +54,11 @@ export function HandHistory({
               <span className="hand-history-street-name">
                 {STREET_LABELS[street] ?? street.toUpperCase()}
               </span>
-              <span className="hand-history-pot">pot {fmtChips(firstPot)}</span>
+              <span className="hand-history-pot">pot {fmtBB(firstPot, bigBlind)}</span>
             </div>
             <ul className="hand-history-actions">
               {recs.map((r, i) => {
-                const { verb, amount } = describe(r);
+                const { verb, amount } = describe(r, bigBlind);
                 return (
                   <li key={i} className={`hh-row hh-row-${r.player}`}>
                     <span className={`hh-actor hh-actor-${r.player}`}>

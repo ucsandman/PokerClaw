@@ -1,10 +1,7 @@
 import type { Card, Street } from '../../shared/types';
 import { CardView } from './CardView';
 import { ChipStack } from './ChipStack';
-
-function fmtChips(n: number): string {
-  return n.toLocaleString('en-US');
-}
+import { fmtBB } from '../fmt';
 
 const STREET_LABEL: Record<Street, string> = {
   preflop: 'PREFLOP',
@@ -19,9 +16,10 @@ type Props = {
   board: Card[];
   pot: number;
   street: Street;
+  bigBlind: number;
 };
 
-export function Board({ board, pot, street }: Props) {
+export function Board({ board, pot, street, bigBlind }: Props) {
   const slots: Array<Card | null> = [...board];
   while (slots.length < 5) slots.push(null);
   return (
@@ -30,7 +28,7 @@ export function Board({ board, pot, street }: Props) {
         <ChipStack amount={pot} variant="pot" />
         <div className="pot-pill">
           <span className="pot-label">POT</span>
-          <span className="pot-value">{fmtChips(pot)}</span>
+          <span className="pot-value">{fmtBB(pot, bigBlind)}</span>
         </div>
       </div>
       <div className="board-cards">

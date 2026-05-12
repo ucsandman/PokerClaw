@@ -103,16 +103,35 @@ describe('privacy view-models', () => {
     }
   });
 
-  it('on fold, opponent cards stay hidden in the loser-folded view', () => {
+  it('reveals both players hole cards after a fold (study-mode UX)', () => {
+    // PokerClaw is single-player practice; seeing the opponent's folded
+    // cards is much more useful than the live-poker convention of hiding
+    // them. Both holes are revealed only AFTER the hand completes — during
+    // the hand the opponent's cards are still strictly hidden.
     const s = startSession(CONFIG, { button: 'wes', rand: seededRand(106) });
-    // SB (wes) folds preflop. Wes's cards must not be revealed to MoltFire.
     const wesCards = new Set(s.players.wes.holeCards.map(cardId));
+    const moltCards = new Set(s.players.moltfire.holeCards.map(cardId));
+
+    // Before the fold, opponent's cards must not be in the view.
+    const midHandView = viewForPlayer(s, 'moltfire');
+    const midHandCards = collectCards(JSON.parse(JSON.stringify(midHandView)));
+    for (const id of wesCards) expect(midHandCards).not.toContain(id);
+
     applyAction(s, 'wes', { type: 'fold' });
     expect(s.handComplete).toBe(true);
+
+    // After the fold, both views include both players' cards.
+    const wesView = viewForPlayer(s, 'wes');
     const moltView = viewForPlayer(s, 'moltfire');
-    const cards = collectCards(JSON.parse(JSON.stringify(moltView)));
+    const wesViewCards = collectCards(JSON.parse(JSON.stringify(wesView)));
+    const moltViewCards = collectCards(JSON.parse(JSON.stringify(moltView)));
     for (const id of wesCards) {
-      expect(cards).not.toContain(id);
+      expect(wesViewCards).toContain(id);
+      expect(moltViewCards).toContain(id);
+    }
+    for (const id of moltCards) {
+      expect(wesViewCards).toContain(id);
+      expect(moltViewCards).toContain(id);
     }
   });
 });

@@ -67,7 +67,7 @@ The browser opens at `http://localhost:5173` and you're playing. No keys, no set
    ```
    For snappier responses (well under 3s per decision), set:
    ```dotenv
-   POKERCLAW_FAST_MODEL=claude-haiku-4-5-20251001
+   POKERCLAW_FAST_MODEL=claude-haiku-4-5
    ```
 4. Run `python poker.py`. The header badge will read `Fast · <model name>`.
 
