@@ -71,21 +71,30 @@ export function decisionKey(v: PlayerView): string {
 export class AgentRunner {
   private lastDecisionKey: string | null = null;
   private inFlightDecisionKey: string | null = null;
+  // True once we've successfully fetched dealer state at least once. Until
+  // then, fetch errors are suppressed (the agent and dealer race at boot —
+  // the agent pings while Express is still binding, and the first attempt
+  // routinely fails. Logging that as a scary "error: fetch failed" line is
+  // the first thing newcomers see and it looks broken). After the first
+  // success, dealer disappearing is a real problem and we log normally.
+  private everConnected = false;
 
   constructor(private readonly opts: AgentRunnerOpts) {}
 
   // Test-only accessors. Kept narrow on purpose.
   get _lastDecisionKey(): string | null { return this.lastDecisionKey; }
   get _inFlightDecisionKey(): string | null { return this.inFlightDecisionKey; }
+  get _everConnected(): boolean { return this.everConnected; }
 
   async tick(): Promise<TickResult> {
     let view: PlayerView;
     try {
       view = await this.opts.client.getState();
     } catch (err) {
-      this.opts.log.error(err);
+      if (this.everConnected) this.opts.log.error(err);
       return { kind: 'idle', reason: 'fetch-failed' };
     }
+    this.everConnected = true;
 
     if (view.handComplete) return { kind: 'idle', reason: 'hand-complete' };
     if (view.currentActor !== 'moltfire') return { kind: 'idle', reason: 'not-my-turn' };

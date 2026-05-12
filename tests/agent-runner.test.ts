@@ -290,11 +290,18 @@ describe('AgentRunner', () => {
     expect(strategy.calls).toBe(1);
   });
 
-  it('reports fetch-failure and clears in-flight state', async () => {
+  it('suppresses the first fetch-failure (boot race) but logs subsequent ones', async () => {
+    // The agent and dealer race at startup — the agent's first poll often
+    // arrives before Express finishes binding. Logging that as "error: fetch
+    // failed" is the first thing newcomers see and looks broken. Once we've
+    // connected once, any subsequent fetch failure IS a real problem and
+    // should be logged normally.
     const strategy = makeFixedStrategy({ type: 'check' });
+    let connectsAllowed = false;
     const client: AgentClientLike = {
       async getState() {
-        throw new Error('ECONNREFUSED');
+        if (!connectsAllowed) throw new Error('ECONNREFUSED');
+        return makeView();
       },
       async postAction() {
         return makeView();
@@ -302,9 +309,24 @@ describe('AgentRunner', () => {
     };
     const log = makeLogSpies();
     const runner = new AgentRunner({ client, chain: [strategy], mode: 'match', dryRun: false, log });
-    const result = await runner.tick();
-    expect(result).toEqual({ kind: 'idle', reason: 'fetch-failed' });
-    expect(log.error).toHaveBeenCalledOnce();
+
+    // Tick 1: pre-connect failure → no log line.
+    const r1 = await runner.tick();
+    expect(r1).toEqual({ kind: 'idle', reason: 'fetch-failed' });
+    expect(log.error).not.toHaveBeenCalled();
+    expect(runner._everConnected).toBe(false);
     expect(runner._inFlightDecisionKey).toBeNull();
+
+    // Tick 2: dealer comes up, we connect, hand is processed.
+    connectsAllowed = true;
+    const r2 = await runner.tick();
+    expect(r2.kind).toBe('posted');
+    expect(runner._everConnected).toBe(true);
+
+    // Tick 3: dealer disappears mid-game → must log normally.
+    connectsAllowed = false;
+    const r3 = await runner.tick();
+    expect(r3).toEqual({ kind: 'idle', reason: 'fetch-failed' });
+    expect(log.error).toHaveBeenCalledOnce();
   });
 });
