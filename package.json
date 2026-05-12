@@ -1,0 +1,39 @@
+{
+  "name": "pokerclaw",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local heads-up Texas Hold'em sandbox: Wes (browser) vs MoltFire (API).",
+  "scripts": {
+    "dev:server": "tsx watch server/index.ts",
+    "dev:client": "vite",
+    "dev": "concurrently -n server,client -c blue,green \"npm:dev:server\" \"npm:dev:client\"",
+    "build": "tsc --noEmit && vite build",
+    "start": "tsx server/index.ts",
+    "agent": "tsx agent/index.ts",
+    "agent:dry-run": "tsx agent/index.ts --dry-run",
+    "bridge": "node bridge/moltfire-bridge.mjs",
+    "bridge:dry-run": "node bridge/moltfire-bridge.mjs --dry-run",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^4.19.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.2",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "concurrently": "^8.2.2",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.3",
+    "vite": "^5.3.3",
+    "vitest": "^1.6.0"
+  }
+}
