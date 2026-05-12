@@ -293,9 +293,78 @@ def build_child_env(extra: dict[str, str] | None = None) -> dict[str, str]:
         == "openclaw-bridge"
     ):
         merged.setdefault("POKERCLAW_AGENT_BRIDGE_ENABLED", "true")
+        # Best-effort OpenClaw identity lookup. Failure is non-fatal — the
+        # dealer's resolveOpponentProfile() falls back to a generic profile.
+        if not merged.get("POKERCLAW_OPPONENT_NAME"):
+            ident = fetch_openclaw_identity(
+                merged.get("POKERCLAW_BRIDGE_LIVE_AGENT_ID", "")
+            )
+            if ident is not None:
+                if ident.get("name"):
+                    merged["POKERCLAW_OPPONENT_NAME"] = ident["name"]
+                if ident.get("emoji"):
+                    merged["POKERCLAW_OPPONENT_EMOJI"] = ident["emoji"]
+                if ident.get("theme"):
+                    merged["POKERCLAW_OPPONENT_THEME"] = ident["theme"]
+                if ident.get("avatar"):
+                    merged["POKERCLAW_OPPONENT_AVATAR"] = ident["avatar"]
+                merged["POKERCLAW_OPPONENT_FROM_OPENCLAW"] = "true"
     if extra:
         merged.update(extra)
     return merged
+
+
+def fetch_openclaw_identity(agent_id: str) -> dict[str, str] | None:
+    """Return identity fields for `agent_id` from `openclaw agents list --json`.
+
+    Returns a dict with optional keys: name, emoji, theme, avatar. Returns
+    None when the lookup fails, the agent is not found, or the CLI is not
+    installed. Never raises — callers proceed without identity injection.
+    """
+    if not agent_id.strip():
+        return None
+    if shutil.which("openclaw") is None:
+        return None
+    try:
+        result = subprocess.run(
+            ["openclaw", "agents", "list", "--json"],
+            capture_output=True,
+            text=True,
+            shell=False,
+            check=False,
+            timeout=10,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if result.returncode != 0:
+        return None
+    try:
+        agents = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(agents, list):
+        return None
+    target = agent_id.strip()
+    for a in agents:
+        if not isinstance(a, dict):
+            continue
+        if a.get("id") == target:
+            out: dict[str, str] = {}
+            for src, dst in (
+                ("identityName", "name"),
+                ("identityEmoji", "emoji"),
+                ("identityTheme", "theme"),
+                ("identityAvatar", "avatar"),
+            ):
+                v = a.get(src)
+                if isinstance(v, str) and v.strip():
+                    out[dst] = v.strip()
+            if "name" not in out:
+                fallback_name = a.get("name")
+                if isinstance(fallback_name, str) and fallback_name.strip():
+                    out["name"] = fallback_name.strip()
+            return out if out else None
+    return None
 
 
 # ----------------------------------------------------------------------------

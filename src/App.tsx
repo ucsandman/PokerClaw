@@ -150,6 +150,7 @@ export default function App() {
   const moltIsActor = view.currentActor === 'moltfire';
   const wesWon = view.handComplete && view.result?.winner === 'wes';
   const moltWon = view.handComplete && view.result?.winner === 'moltfire';
+  const opponentName = view.opponentProfile?.name ?? 'Opponent';
   // Match over = the hand finished AND a player can no longer post chips for
   // the next hand. The dealer refuses to start the next hand in that state,
   // so the UI swaps "Deal next hand" for "Play again" (which resets to a
@@ -178,7 +179,11 @@ export default function App() {
           onEnd={onEndTraining}
           onReview={onReview}
         />
-        <AgentStatusBadge status={view.agentStatus} moltfireToAct={moltIsActor} />
+        <AgentStatusBadge
+          status={view.agentStatus}
+          moltfireToAct={moltIsActor}
+          opponentName={opponentName}
+        />
       </header>
 
       {error && <div className="error-banner">{error}</div>}
@@ -186,13 +191,14 @@ export default function App() {
       <div className="felt-wrap">
         <div className="felt">
           <PlayerSeat
-            label="MoltFire"
+            label={opponentName}
             player="moltfire"
             seat={view.opponent}
             isCurrentActor={moltIsActor}
             isButton={!wesIsButton}
             isWinner={moltWon}
             bigBlind={view.bigBlind}
+            profile={view.opponentProfile}
           />
           <Board board={view.board} pot={view.pot} street={view.street} />
           <PlayerSeat
@@ -210,13 +216,13 @@ export default function App() {
       <div className="footer">
         {view.handComplete && view.result ? (
           <div className="result-area">
-            <ResultBanner result={view.result} />
+            <ResultBanner result={view.result} opponentName={opponentName} />
             {matchOver ? (
               <>
                 <div className="match-over">
                   {matchWinner === 'wes'
                     ? 'Match over — you win the match!'
-                    : 'Match over — MoltFire wins the match.'}
+                    : `Match over — ${opponentName} wins the match.`}
                 </div>
                 <button
                   className="primary primary-deal"
@@ -239,7 +245,7 @@ export default function App() {
               {wesIsActor
                 ? 'Your action'
                 : moltIsActor
-                ? 'MoltFire is thinking…'
+                ? `${opponentName} is thinking…`
                 : 'Dealing…'}
             </div>
             <ActionPanel
@@ -260,7 +266,7 @@ export default function App() {
           <span className="history-summary-label">Hand history</span>
           <span className="history-summary-hint">{view.actionHistory.length} actions</span>
         </summary>
-        <HandHistory history={view.actionHistory} />
+        <HandHistory history={view.actionHistory} opponentName={opponentName} />
       </details>
 
       <ReviewModal

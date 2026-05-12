@@ -1,5 +1,5 @@
 import type { PlayerId } from '../../shared/types';
-import type { OpponentView, SelfView } from '../../shared/view-models';
+import type { OpponentProfile, OpponentView, SelfView } from '../../shared/view-models';
 import { CardView } from './CardView';
 import { Avatar } from './Avatar';
 import { ChipStack } from './ChipStack';
@@ -12,6 +12,8 @@ type Props = {
   isButton: boolean;
   isWinner: boolean;
   bigBlind: number;
+  // Only set for the opponent seat — drives emoji, theme tint, and avatar URL.
+  profile?: OpponentProfile;
 };
 
 // Format chip counts with thousands separators. Stable across locales.
@@ -26,6 +28,8 @@ function fmtBB(stack: number, bigBlind: number): string {
   return `${(Math.round(bb * 10) / 10).toFixed(1)} BB`;
 }
 
+const KNOWN_THEMES = new Set(['red', 'blue', 'green', 'purple', 'gold']);
+
 export function PlayerSeat({
   label,
   player,
@@ -34,7 +38,10 @@ export function PlayerSeat({
   isButton,
   isWinner,
   bigBlind,
+  profile,
 }: Props) {
+  const theme = profile?.theme?.toLowerCase().trim();
+  const themeClass = theme && KNOWN_THEMES.has(theme) ? `theme-${theme}` : '';
   const seatClass = [
     'seat',
     `seat-${player}`,
@@ -49,8 +56,15 @@ export function PlayerSeat({
     <div className={seatClass}>
       <div className="seat-row seat-row-top">
         <div className="seat-identity">
-          <Avatar player={player} active={isCurrentActor} />
-          <div className="seat-name-block">
+          <Avatar
+            player={player}
+            active={isCurrentActor}
+            glyph={profile?.emoji}
+            ariaName={profile ? `${profile.name} avatar` : undefined}
+            avatarUrl={profile?.avatarUrl}
+            theme={profile?.theme}
+          />
+          <div className={`seat-name-block ${themeClass}`.trim()}>
             <span className="seat-name">{label}</span>
             <div className="seat-tags">
               {seat.folded && <span className="seat-tag tag-fold">FOLD</span>}

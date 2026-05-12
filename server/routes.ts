@@ -3,6 +3,7 @@ import type { PlayerAction, PlayerId } from '../shared/types';
 import { viewForPlayer, type AgentStatus } from '../shared/view-models';
 import type { Session } from './state';
 import { generateReview } from './review';
+import { resolveOpponentProfile } from './opponent';
 
 // Builds the API router. The router only ever returns scrubbed views via
 // viewForPlayer — full GameState is never serialized to the wire.
@@ -14,6 +15,7 @@ export function buildRouter(session: Session): Router {
       viewForPlayer(session.rawState(), 'wes', {
         agentStatus: session.getAgentStatus(),
         training: session.trainingStatus(),
+        opponentProfile: resolveOpponentProfile(process.env),
       }),
     );
   });
@@ -27,6 +29,7 @@ export function buildRouter(session: Session): Router {
       viewForPlayer(session.rawState(), 'moltfire', {
         agentStatus: session.getAgentStatus(),
         training: session.trainingStatus(),
+        opponentProfile: resolveOpponentProfile(process.env),
       }),
     );
   });
@@ -137,6 +140,7 @@ function handleAction(
     viewForPlayer(session.rawState(), playerId, {
       agentStatus: session.getAgentStatus(),
       training: session.trainingStatus(),
+      opponentProfile: resolveOpponentProfile(process.env),
     }),
   );
 }

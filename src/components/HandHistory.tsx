@@ -4,8 +4,8 @@ function fmtChips(n: number): string {
   return n.toLocaleString('en-US');
 }
 
-function actorLabel(player: PlayerId): string {
-  return player === 'wes' ? 'Wes' : 'MoltFire';
+function actorLabel(player: PlayerId, opponentName: string): string {
+  return player === 'wes' ? 'Wes' : opponentName;
 }
 
 function describe(r: ActionRecord): { verb: string; amount: string | null } {
@@ -28,7 +28,13 @@ const STREET_LABELS: Record<string, string> = {
   complete: 'RESULT',
 };
 
-export function HandHistory({ history }: { history: ActionRecord[] }) {
+export function HandHistory({
+  history,
+  opponentName = 'Opponent',
+}: {
+  history: ActionRecord[];
+  opponentName?: string;
+}) {
   if (history.length === 0) {
     return <div className="hand-history empty">No actions yet.</div>;
   }
@@ -57,7 +63,7 @@ export function HandHistory({ history }: { history: ActionRecord[] }) {
                 return (
                   <li key={i} className={`hh-row hh-row-${r.player}`}>
                     <span className={`hh-actor hh-actor-${r.player}`}>
-                      {actorLabel(r.player)}
+                      {actorLabel(r.player, opponentName)}
                     </span>
                     <span className="hh-verb">{verb}</span>
                     {amount && <span className="hh-amount">{amount}</span>}

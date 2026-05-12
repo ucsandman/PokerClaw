@@ -17,9 +17,15 @@ function fmtChips(n: number): string {
   return n.toLocaleString('en-US');
 }
 
-export function ResultBanner({ result }: { result: HandResult }) {
+export function ResultBanner({
+  result,
+  opponentName = 'Opponent',
+}: {
+  result: HandResult;
+  opponentName?: string;
+}) {
   const isTie = result.winner === 'tie';
-  const who = result.winner === 'wes' ? 'Wes' : result.winner === 'moltfire' ? 'MoltFire' : null;
+  const who = result.winner === 'wes' ? 'Wes' : result.winner === 'moltfire' ? opponentName : null;
   const reasonLabel = result.reason === 'fold' ? 'Won uncontested' : 'Showdown';
 
   const showdown = result.showdown;
@@ -47,7 +53,7 @@ export function ResultBanner({ result }: { result: HandResult }) {
               </span>
               <span className="result-detail-sep" aria-hidden="true">vs</span>
               <span className="result-detail-side">
-                <span className="result-detail-name">MoltFire</span>
+                <span className="result-detail-name">{opponentName}</span>
                 <span className="result-detail-cat">
                   {CATEGORY_LABEL[showdown.moltfire.category]}
                 </span>

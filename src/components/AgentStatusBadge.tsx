@@ -2,11 +2,13 @@ import type { AgentStatus } from '../../shared/view-models';
 
 type Props = {
   status?: AgentStatus;
-  // True when it's MoltFire's turn; UI uses this to render "thinking…".
+  // True when it's the opponent's turn; UI uses this to render "thinking…".
   moltfireToAct: boolean;
+  // Display name for the opponent (resolved from OpponentProfile upstream).
+  opponentName?: string;
 };
 
-export function AgentStatusBadge({ status, moltfireToAct }: Props) {
+export function AgentStatusBadge({ status, moltfireToAct, opponentName }: Props) {
   if (!status || !status.connected) {
     return (
       <div className="agent-badge agent-offline">
@@ -15,16 +17,17 @@ export function AgentStatusBadge({ status, moltfireToAct }: Props) {
       </div>
     );
   }
+  const who = opponentName ? `${opponentName} · ` : '';
   const strategyLabel =
     status.strategy === 'openclaw-bridge'
-      ? `OpenClaw · ${status.sessionLabel ?? 'moltfire-pokerclaw'}`
+      ? `${who}OpenClaw`
       : status.strategy === 'fast-live'
-      ? `Fast · ${status.model ?? status.provider ?? 'model'}`
+      ? `${who}Fast`
       : status.strategy === 'llm'
-      ? `LLM · ${status.provider ?? 'unknown'}`
+      ? `${who}LLM`
       : status.strategy === 'rules'
-      ? 'Rule bot'
-      : 'Agent';
+      ? `${who || ''}Rule bot`
+      : `${who || ''}Agent`;
 
   return (
     <div className="agent-badge agent-online">

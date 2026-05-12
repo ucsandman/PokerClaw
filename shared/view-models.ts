@@ -69,6 +69,9 @@ export type PlayerView = {
   // Active training-session status (UI toggle + hand counter). Optional —
   // older clients ignore the field gracefully. Card-free by construction.
   training?: TrainingStatusPublic;
+  // Display profile for the opponent. UI renders name + emoji + theme from
+  // this field. Falls back to a generic "Opponent" when absent.
+  opponentProfile?: OpponentProfile;
 };
 
 // Public training status carried on the view. No card data, no deck info.
@@ -80,11 +83,31 @@ export type TrainingStatusPublic = {
   handCount: number;
 };
 
+// Display profile for the opponent (the non-Wes seat). Resolved from
+// environment variables on the server — populated automatically from the
+// configured OpenClaw agent's identity when the openclaw-bridge strategy
+// is active, or falls back to strategy-appropriate defaults (e.g. "Rule Bot"
+// in rules mode, the model name in fast-live mode).
+export type OpponentProfile = {
+  name: string;
+  emoji?: string;
+  // Free-form theme color hint from OpenClaw's set-identity (e.g. "red").
+  // The UI maps it to a CSS variable when it recognizes the name.
+  theme?: string;
+  // Optional avatar URL or data URI. The UI falls back to the CSS-only
+  // avatar (or the emoji) when absent.
+  avatarUrl?: string;
+  // Where the profile came from. Useful for the UI to show a small badge
+  // ("from your OpenClaw agent") and for tests.
+  source: 'openclaw' | 'config' | 'default';
+};
+
 // Optional second-argument to viewForPlayer carrying ambient session info
 // the engine itself doesn't track.
 export type ViewContext = {
   agentStatus?: AgentStatus;
   training?: TrainingStatusPublic;
+  opponentProfile?: OpponentProfile;
 };
 
 // Returns the authorized view of the game state for `viewer`. Never returns
@@ -137,6 +160,7 @@ export function viewForPlayer(
     tournament: getBlindDisplay(state.handId, state.blindSchedule),
     agentStatus: ctx.agentStatus,
     training: ctx.training,
+    opponentProfile: ctx.opponentProfile,
   };
 }
 
