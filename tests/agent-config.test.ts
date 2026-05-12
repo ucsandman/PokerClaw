@@ -79,7 +79,8 @@ describe('agent startup banner', () => {
     const cfg = loadAgentConfig(BASE_ENV, []);
     const line = describeStartup(cfg);
     expect(line).toContain('strategy=rules');
-    expect(line).toContain('reason=no_fast_model');
+    expect(line).toContain('reason=no_api_key');
+    expect(line).toContain('requested=fast-live');
     // Must never leak card data.
     expect(line).not.toMatch(/[2-9TJQKA][cdhs]/);
   });

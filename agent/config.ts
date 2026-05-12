@@ -186,26 +186,36 @@ function clampInt(raw: string | undefined, lo: number, hi: number, fallback: num
 // the per-tick logs reveal which strategy actually produced each decision.
 export function describeStartup(cfg: AgentConfig): string {
   const tail = `pollMs=${cfg.pollMs} dryRun=${cfg.dryRun}`;
-  // Same inference as loadAgentConfig / buildStrategyChain: when cfg.strategy
-  // is undefined (test fixtures and back-compat callers), infer from bridge
-  // presence so older configs keep working.
-  const strategy = cfg.strategy ?? (cfg.bridge ? 'openclaw-bridge' : 'fast-live');
-  if (strategy === 'openclaw-bridge' && cfg.bridge) {
-    const fallback = cfg.disableFallback ? 'disabled' : cfg.llm ? 'llm,rules' : 'rules';
+  // What the operator asked for vs what'll actually run first. When the
+  // configured strategy can't be satisfied (e.g. POKERCLAW_STRATEGY=
+  // openclaw-bridge but POKERCLAW_AGENT_BRIDGE_ENABLED is unset), we
+  // gracefully degrade to the next-best strategy and the banner reflects
+  // what's actually going to happen, with a `requested=` note for the
+  // upstream intent so operators can see why their setup degraded.
+  const requested = cfg.strategy ?? (cfg.bridge ? 'openclaw-bridge' : 'fast-live');
+
+  if (requested === 'openclaw-bridge' && cfg.bridge) {
+    const fallback = cfg.disableFallback ? 'disabled' : cfg.llm || cfg.fastLive ? 'llm,rules' : 'rules';
     return `starting mode=${cfg.mode} strategy=openclaw-bridge sessionLabel=${cfg.bridge.sessionLabel} bridgeUrl=${cfg.bridge.url} fallback=${fallback} ${tail}`;
   }
-  if (strategy === 'rules') {
+  if (requested === 'rules') {
     return `starting mode=${cfg.mode} strategy=rules ${tail}`;
   }
-  if (strategy === 'fast-live' && cfg.fastLive) {
+  // openclaw-bridge requested but bridge env didn't resolve. Fall to fast-live
+  // if it's configured, otherwise rules.
+  if (requested === 'openclaw-bridge' && cfg.fastLive) {
+    const shortcuts = cfg.ruleShortcutsEnabled ? 'enabled' : 'disabled';
+    const fallback = cfg.disableFallback ? 'disabled' : 'rules';
+    return `starting mode=${cfg.mode} strategy=fast-live requested=openclaw-bridge reason=bridge_unreachable provider=${cfg.fastLive.provider} model=${cfg.fastLive.model} timeoutMs=${cfg.fastLive.timeoutMs} shortcuts=${shortcuts} fallback=${fallback} ${tail}`;
+  }
+  if (requested === 'openclaw-bridge') {
+    return `starting mode=${cfg.mode} strategy=rules requested=openclaw-bridge reason=bridge_unreachable ${tail}`;
+  }
+  // fast-live path.
+  if (cfg.fastLive) {
     const shortcuts = cfg.ruleShortcutsEnabled ? 'enabled' : 'disabled';
     const fallback = cfg.disableFallback ? 'disabled' : 'rules';
     return `starting mode=${cfg.mode} strategy=fast-live provider=${cfg.fastLive.provider} model=${cfg.fastLive.model} timeoutMs=${cfg.fastLive.timeoutMs} shortcuts=${shortcuts} fallback=${fallback} ${tail}`;
   }
-  // strategy=fast-live but no provider configured → degraded to rules.
-  if (strategy === 'fast-live') {
-    return `starting mode=${cfg.mode} strategy=rules reason=no_fast_model ${tail}`;
-  }
-  // strategy=openclaw-bridge but bridge env not set → degraded.
-  return `starting mode=${cfg.mode} strategy=rules reason=no_bridge_config ${tail}`;
+  return `starting mode=${cfg.mode} strategy=rules requested=fast-live reason=no_api_key ${tail}`;
 }
