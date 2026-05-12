@@ -325,11 +325,24 @@ def fetch_openclaw_identity(agent_id: str) -> dict[str, str] | None:
         return None
     if shutil.which("openclaw") is None:
         return None
+    # On Windows `openclaw.cmd` can't be CreateProcessW'd directly with
+    # shell=False — same reason `_npm_argv` wraps in `cmd.exe /c`. The agents
+    # list output has no special chars so cmd.exe re-parsing is safe.
+    if os.name == "nt":
+        argv = ["cmd.exe", "/c", "openclaw", "agents", "list", "--json"]
+    else:
+        argv = ["openclaw", "agents", "list", "--json"]
     try:
         result = subprocess.run(
-            ["openclaw", "agents", "list", "--json"],
+            argv,
             capture_output=True,
             text=True,
+            # Force UTF-8 — openclaw emits UTF-8 JSON (emoji in identity
+            # fields), but Python on Windows defaults to cp1252 which mangles
+            # them to mojibake. errors="replace" keeps a single bad byte from
+            # killing the whole parse.
+            encoding="utf-8",
+            errors="replace",
             shell=False,
             check=False,
             timeout=10,
