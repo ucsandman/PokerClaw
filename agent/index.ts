@@ -36,6 +36,16 @@ const statusPayload = {
 // the agent starts.
 client.postStatus(statusPayload).catch(() => undefined);
 
+// Heartbeat on an INDEPENDENT timer so the UI badge stays green while a slow
+// decision is in flight. The dealer's TTL is 5000ms; we ping every 2000ms so
+// even a 30-second OpenClaw bridge call doesn't make the UI flip to "offline"
+// mid-think. The runner loop below is unrelated and may block for as long as
+// the configured strategy needs.
+const HEARTBEAT_INTERVAL_MS = 2000;
+const heartbeatTimer = setInterval(() => {
+  client.postStatus(statusPayload).catch(() => undefined);
+}, HEARTBEAT_INTERVAL_MS);
+
 const runner = new AgentRunner({
   client,
   chain,
@@ -56,7 +66,6 @@ function sleep(ms: number): Promise<void> {
 // stale-action posts described in AGENT_RACE_BUGFIX.md).
 async function runLoop(): Promise<void> {
   while (!stopped) {
-    client.postStatus(statusPayload).catch(() => undefined);
     const started = Date.now();
     try {
       await runner.tick();
@@ -73,6 +82,7 @@ runLoop().catch(logError);
 
 process.on('SIGINT', () => {
   stopped = true;
+  clearInterval(heartbeatTimer);
   logInfo('agent stopped');
   process.exit(0);
 });
